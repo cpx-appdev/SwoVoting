@@ -12,12 +12,10 @@
             <EditForm Model="@typeof(string)" OnValidSubmit="UpdateQuestion">
                 <div class="input-group mb-3">
                     <InputTextArea id="question" class="form-control" @bind-Value="_question" rows="4" placeholder="Put your question here..." />
-
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="submit">Update + Reset</button>
                     </div>
                 </div>
-
             </EditForm>
         </div>
     </div>
@@ -40,91 +38,3 @@
         <div class="col display-4 text-center">@_down</div>
     </div>
 </div>
-
-@code
-{
-    private string _question;
-    int _up;
-    int _down;
-    private bool _voted;
-    private Guid _clientId;
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _question = VotingService.Question;
-        
-        var currentResults = VotingService.GetCurrentState();
-        _up = currentResults.ThumbsUp;
-        _down = currentResults.ThumbsDown;
-        _question = VotingService.Question;
-        VotingService.VoteChangedEventHandler += OnVoteHasChanged;
-        VotingService.ResetEventHandler += OnReset;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await SetClientIp();
-    }
-
-    private async Task SetClientIp()
-    {
-        const string identifier = "VotingClientID";
-        if (await LocalStorage.ContainKeyAsync(identifier))
-            _clientId = await LocalStorage.GetItemAsync<Guid>(identifier);
-        else
-        {
-            _clientId = Guid.NewGuid();
-            await LocalStorage.SetItemAsync(identifier, _clientId);
-        }
-
-        _voted = VotingService.HasAlreadyVoted(_clientId);
-        StateHasChanged();
-    }
-
-    private void OnReset(object sender, EventArgs e)
-    {
-        _voted = false;
-        _question = VotingService.Question;
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void OnVoteHasChanged(object sender, VotingResultEventArgs e)
-    {
-        _up = e.ThumbsUp;
-        _down = e.ThumbsDown;
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void VoteUp()
-    {
-        if (_voted) return;
-        VotingService.VoteUp(_clientId);
-        _voted = true;
-    }
-
-    public void VoteDown()
-    {
-        if (_voted) return;
-        VotingService.VoteDown(_clientId);
-        _voted = true;
-    }
-
-    private void Reset()
-    {
-        VotingService.Reset();
-    }
-
-    private void UpdateQuestion()
-    {
-        VotingService.UpdateQuestion(_question);
-    }
-
-    public void Dispose()
-    {
-        VotingService.VoteChangedEventHandler -= OnVoteHasChanged;
-        VotingService.ResetEventHandler -= OnReset;
-        Console.WriteLine("removed event handlers");
-    }
-
-}

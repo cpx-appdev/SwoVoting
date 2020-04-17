@@ -10,8 +10,8 @@ namespace VotingTool.Features.Voting
         private int _thumbDownVote;
         public string Question { get; private set; }
 
-        public EventHandler<VotingResultEventArgs> VoteChangedEventHandler;
-        public EventHandler ResetEventHandler;
+        public event EventHandler<VotingResultEventArgs> VoteChangedEventHandler;
+        public event EventHandler ResetEventHandler;
 
         private readonly List<Guid> _votedClients = new List<Guid>();
 
